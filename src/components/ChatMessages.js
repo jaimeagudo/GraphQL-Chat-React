@@ -1,10 +1,10 @@
-import React from 'react';
-import gql from 'graphql-tag';
-import {get} from 'lodash';
-import update from 'immutability-helper';
-import {compose, mapProps, lifecycle} from 'recompose';
-import {graphql} from 'react-apollo';
-import MessageBox from './MessageBox';
+import React from "react";
+import gql from "graphql-tag";
+import { get } from "lodash";
+import update from "immutability-helper";
+import { compose, mapProps, lifecycle } from "recompose";
+import { graphql } from "react-apollo";
+import MessageBox from "./MessageBox";
 
 const chatroom = gql`
   query chatRoom($id: Int!) {
@@ -18,15 +18,23 @@ const chatroom = gql`
 `;
 
 const messageAdded = gql`
-  subscription onMessageAdded($chatroomId: Int!){
-    messageAdded(chatroomId: $chatroomId){
+  subscription onMessageAdded($chatroomId: Int!) {
+    messageAdded(chatroomId: $chatroomId) {
       id
       text
     }
   }
 `;
+// const MessageAdded = gql`
+//   subscription onMessageAdded($chatId: String!) {
+//     MessageAdded(chatId: "17592186045473") {
+//       id
+//       text
+//     }
+//   }
+// `;
 
-function ChatMessages({closeMessages, ready, title, id, messages}) {
+function ChatMessages({ closeMessages, ready, title, id, messages }) {
   return (
     <section>
       <h1 className="title">{title}</h1>
@@ -46,17 +54,17 @@ function ChatMessages({closeMessages, ready, title, id, messages}) {
 
 export default compose(
   graphql(chatroom, {
-    options: ({id}) => {
+    options: ({ id }) => {
       return {
         variables: {
-          id,
-        },
+          id
+        }
       };
-    },
+    }
   }),
-  mapProps(({data, id, ...rest}) => {
+  mapProps(({ data, id, ...rest }) => {
     const subscribeToMore = data && data.subscribeToMore;
-    const messages = data && data.chatroom && data.chatroom.messages;
+    const messages = (data && data.chatroom && data.chatroom.messages) || [];
     return {
       id,
       ready: !data.loading,
@@ -65,39 +73,39 @@ export default compose(
         return subscribeToMore({
           document: messageAdded,
           variables: {
-            chatroomId: id,
+            chatroomId: id
           },
           onError: (e: Object): void => {
-            return console.error('APOLLO-CHAT', e);
+            return console.error("APOLLO-CHAT", e);
           },
           updateQuery: (
             previousResult: Object,
-            {subscriptionData}: Object
+            { subscriptionData }: Object
           ): Object => {
             if (!subscriptionData.data) {
               return previousResult;
             }
 
-            const messageToAdd = get(subscriptionData, 'data.messageAdded');
+            const messageToAdd = get(subscriptionData, "data.messageAdded");
 
             const newResult = update(previousResult, {
               chatroom: {
                 messages: {
-                  $push: [messageToAdd],
-                },
-              },
+                  $push: [messageToAdd]
+                }
+              }
             });
             return newResult;
-          },
+          }
         });
       },
-      ...rest,
+      ...rest
     };
   }),
   lifecycle({
     componentWillMount() {
       const { subscribeToMessages } = this.props;
       return subscribeToMessages();
-    },
+    }
   })
 )(ChatMessages);
