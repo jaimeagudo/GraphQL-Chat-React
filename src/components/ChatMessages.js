@@ -7,8 +7,8 @@ import { graphql } from "react-apollo";
 import MessageBox from "./MessageBox";
 
 const chatroom = gql`
-  query chatRoom($id: Int!) {
-    chatroom(id: $id) {
+  query chatRoom($id: ID!) {
+    Chat(id: $id) {
       messages {
         id
         text
@@ -18,10 +18,15 @@ const chatroom = gql`
 `;
 
 const messageAdded = gql`
-  subscription onMessageAdded($chatroomId: Int!) {
-    messageAdded(chatroomId: $chatroomId) {
+  subscription onMessageAdded($chatroomId: ID!) {
+    OnMessageCreated(chatId: $chatroomId) {
+      createdAt
       id
       text
+      createdBy {
+        displayName
+        id
+      }
     }
   }
 `;
@@ -64,7 +69,7 @@ export default compose(
   }),
   mapProps(({ data, id, ...rest }) => {
     const subscribeToMore = data && data.subscribeToMore;
-    const messages = (data && data.chatroom && data.chatroom.messages) || [];
+    const messages = (data && data.Chat && data.Chat.messages) || [];
     return {
       id,
       ready: !data.loading,
@@ -86,10 +91,10 @@ export default compose(
               return previousResult;
             }
 
-            const messageToAdd = get(subscriptionData, "data.messageAdded");
+            const messageToAdd = get(subscriptionData, "data.OnMessageCreated");
 
             const newResult = update(previousResult, {
-              chatroom: {
+              Chat: {
                 messages: {
                   $push: [messageToAdd]
                 }

@@ -5,8 +5,8 @@ import { graphql } from "react-apollo";
 import ChatroomRow from "./Row";
 
 const chatrooms = gql`
-  {
-    chatrooms {
+  query Chatrooms {
+    Chats {
       id
       title
     }
@@ -35,7 +35,7 @@ function Chatroom({ chatrooms = [] }) {
 export default compose(
   graphql(chatrooms),
   mapProps(({ data, ...rest }) => {
-    const chatrooms = (data && data.chatrooms) || [];
+    const chatrooms = (data && data.Chats) || [];
     return {
       chatrooms,
       ...rest
