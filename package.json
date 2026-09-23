@@ -15,7 +15,7 @@
     "subscriptions-transport-ws": "^0.7.0"
   },
   "devDependencies": {
-    "react-scripts": "^1.0.7"
+    "react-scripts": "^5.0.1"
   },
   "proxy": {
     "/graphql": {
